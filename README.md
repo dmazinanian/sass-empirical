@@ -22,7 +22,7 @@ This information include:
 	* Number of declarations styling vendor-specific properties (e.g., -webkit-column-gap vs -moz-column-gap)
 	* Number of distinct parameters which are used for two or more different property types (e.g., a parameter used for styling the top and margin properties)
 	* Number of declarations using only hard-coded (i.e., literal) values
-	* Number of vendor-specific property declarations which share at least one of the mixinâ€™s parameters
+	* Number of vendor-specific property declarations which share at least one of the mixin’s parameters
 4. **Selectors** and **Nesting** (Output file: {extension}-selectorsInfo.txt)
 	* Name and location
 	* Number of base selectors it consists of (e.g., the grouped selector H1, A > B consists of two base selectors, namely H1 and A > B)
