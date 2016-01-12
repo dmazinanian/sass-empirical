@@ -16,6 +16,18 @@ class SassASTQueryHandler
     @sass_style_sheet_path = sass_style_sheet_path
     @sass_style_sheet = Sass::Engine.for_file(sass_style_sheet_path, {:cache => false}).to_tree
     @imported_from = imported_from
+    @colorFunctions = Set.new %w(rgb rgba mix hsl hsla
+                              adjust-hue lighten darken saturate desaturate
+                              grayscale complement invert alpha
+                              opacity opacify fade-in
+                              transparentize fade-out adjust-color scale-color
+                              change-color)
+
+    @numberFunctions = Set.new %w(red green blue hue saturation lightness str-length str-index
+                                percentage round ceil floor abs min max random
+                                length index)
+
+    @stringFunctions = Set.new %w(unquote quote str-insert str-slice to-upper-case to-lower-case)
 
   end
 
@@ -203,32 +215,73 @@ class SassASTQueryHandler
         else
           scope = 'Local'
         end
-        type = 'Other'
+
+        type = 'OTHER'
+        functionName = ''
+
         if child.expr.kind_of?(Sass::Script::Tree::Funcall)
-          value = child.expr.to_sass
-          if value.start_with?('rgb') || value.start_with?('hsl')
-            type = 'Color'
+          functionName = child.expr.name
+          if isColorFunction(functionName)
+            type = 'COLOR_FUNCTION'
+          elsif isNumberFunction(functionName)
+            type = 'NUMBER_FUNCTION'
+          elsif isStringFunction(functionName)
+            type = 'STRING_FUNCTION'
           else
-            type = 'Function'
+            type = 'OTHER_FUNCTION'
           end
         elsif child.expr.kind_of?(Sass::Script::Tree::Literal)
           value = child.expr.value
           if value.kind_of?(Sass::Script::Value::Number)
-            type = 'Number'
+            type = 'NUMBER'
           elsif value.kind_of?(Sass::Script::Value::String)
             if value.to_sass.start_with?('url')
-              type = 'Function'
-            elsif value.to_sass =~ /\".*\"/
-              type = 'String'
+              type = 'OTHER_FUNCTION'
+            elsif value.to_sass =~ /".*"/ or value.to_sass =~ /'.*'/
+              type = 'STRING'
             else
-              type = 'Identifier'
+              type = 'IDENTIFIER'
             end
           elsif value.kind_of?(Sass::Script::Value::Color)
-            type = 'Color'
+            type = 'COLOR'
+          else
+            type = 'IDENTIFIER'
+          end
+
+        elsif child.expr.kind_of?(Sass::Script::Tree::Interpolation) or
+            child.expr.kind_of?(Sass::Script::Tree::Variable) or
+            child.expr.kind_of?(Sass::Script::Tree::Operation) or
+            child.expr.kind_of?(Sass::Script::Tree::StringInterpolation) or
+            child.expr.kind_of?(Sass::Script::Tree::UnaryOperation)
+          type = 'EXPRESSION_OF_VARIABLE'
+        elsif child.expr.kind_of?(Sass::Script::Tree::MapLiteral)
+          child.expr.pairs.each do |k, v|
+            if k.kind_of?(Sass::Script::Tree::Variable) or
+                v.kind_of?(Sass::Script::Tree::Variable)
+              type = 'EXPRESSION_OF_VARIABLE'
+              break
+            end
+          end
+          if (type.eql?('OTHER'))
+            type = 'LITERAL_LIST'
+          end
+        elsif child.expr.kind_of?(Sass::Script::Tree::ListLiteral)
+          child.expr.elements.each do |c|
+            if c.kind_of?(Sass::Script::Tree::Variable)
+              type = 'EXPRESSION_OF_VARIABLE'
+              break
+            end
+          end
+          if (type.eql?('OTHER'))
+            type = 'LITERAL_LIST'
           end
         end
 
-        variable_declaration = SassVariable.new(child, scope, type, @sass_style_sheet, @sass_style_sheet_path)
+        if type.eql?('OTHER')
+          functionName = child.expr.class.to_s
+        end
+
+        variable_declaration = SassVariable.new(child, scope, type, functionName, @sass_style_sheet, @sass_style_sheet_path)
         variables_info << variable_declaration
 
       end
@@ -243,6 +296,18 @@ class SassASTQueryHandler
     end
 
     variables_info
+  end
+
+  def isColorFunction(value)
+    @colorFunctions.include?value
+  end
+
+  def isNumberFunction(value)
+    @numberFunctions.include?value
+  end
+
+  def isStringFunction(value)
+    @stringFunctions.include?value
   end
 
   def get_declared_script_functions_info(imports_to_skip = Set.new)

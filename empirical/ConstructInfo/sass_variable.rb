@@ -4,14 +4,15 @@ class SassVariable < SassConstruct
 
   attr_reader :type
   attr_reader :scope
+  attr_reader :functionName
 
-
-  def initialize(sass_node, scope, type, style_sheet, style_sheet_path)
+  def initialize(sass_node, scope, type, funcname, style_sheet, style_sheet_path)
 
     super(sass_node, style_sheet, style_sheet_path)
     @sass_variable_node = sass_node
     @scope = scope
     @type = type
+    @functionName = funcname
 
   end
 

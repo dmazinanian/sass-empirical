@@ -194,7 +194,7 @@ class EmpiricalStudy
   def write_variable_declarations_to_file(path, header)
 
     if (header)
-      write_line_to_file(path, "WebSite|File|Line|Variable|Type|Scope\n", false);
+      write_line_to_file(path, "WebSite|File|Line|Variable|Type|Scope|FunctionName\n", false);
     end
 
     already_visited_variables = Set.new
@@ -213,8 +213,9 @@ class EmpiricalStudy
           variable = variable_info.name.gsub('|', '{???}')
           type = variable_info.type
           scope = variable_info.scope
+          function_name = variable_info.functionName
 
-          line = "#{@website}|#{style_sheet_path}|#{line}|#{variable}|#{type}|#{scope}\n"
+          line = "#{@website}|#{style_sheet_path}|#{line}|#{variable}|#{type}|#{scope}|#{function_name}\n"
           write_line_to_file(path, line, true)
 
         end
