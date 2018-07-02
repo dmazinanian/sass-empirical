@@ -52,7 +52,9 @@ class SassASTQueryHandler
           end
         end
 
-        sass_mixin_call = SassMixinCall.new(m, number_of_multivalued_args, @sass_style_sheet, @sass_style_sheet_path)
+        parents_to_root = get_elements_up_to_root(m)
+
+        sass_mixin_call = SassMixinCall.new(m, parents_to_root, number_of_multivalued_args, @sass_style_sheet, @sass_style_sheet_path)
         sass_mixin_declaration = get_declaration_for_mixin_call(sass_mixin_call)
         sass_mixin_call.mixin_declaration = sass_mixin_declaration
         to_return << sass_mixin_call
@@ -677,4 +679,14 @@ class SassASTQueryHandler
     parents_map
 
   end
+
+  def get_elements_up_to_root(element)
+    elements = []
+    while !element.nil? and !element.equal?(@sass_style_sheet)
+      element = @parents_map[element]
+      elements << element unless element.nil? or element.equal?(@sass_style_sheet)
+    end
+    elements
+  end
+
 end
