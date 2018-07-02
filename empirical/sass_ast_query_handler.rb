@@ -160,14 +160,14 @@ class SassASTQueryHandler
     all_imports
   end
 
-  def get_all_declarations(node)
+  def get_all_declarations(node, allowNesting = true)
     to_return = Hash.new
     node.children.each { |child|
       if child.kind_of?(Sass::Tree::PropNode)
         to_return[child] = node
-      elsif child.kind_of?(Sass::Tree::RuleNode) ||
+      elsif (child.kind_of?(Sass::Tree::RuleNode) ||
           child.kind_of?(Sass::Tree::MediaNode) ||
-          child.kind_of?(Sass::Tree::MixinNode)
+          child.kind_of?(Sass::Tree::MixinNode)) && allowNesting
         self.get_all_declarations(child).each { |c, p|
           to_return[c] = p
         }
