@@ -4,8 +4,10 @@ class SassConstruct
   attr_reader :path_to_style_sheet
   attr_reader :start_line
   attr_reader :end_line
+  attr_reader :original_sass_node
 
   def initialize(sass_node, style_sheet, path_to_style_sheet)
+    @original_sass_node = sass_node
     @style_sheet = style_sheet
     @path_to_style_sheet = path_to_style_sheet
     source_range = sass_node.source_range
