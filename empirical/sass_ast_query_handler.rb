@@ -29,6 +29,8 @@ class SassASTQueryHandler
 
     @stringFunctions = Set.new %w(unquote quote str-insert str-slice to-upper-case to-lower-case)
 
+    @parents_map = get_elements_parent_map
+
   end
 
   def self.remove_illegal_chars(string)
@@ -663,4 +665,16 @@ class SassASTQueryHandler
     count
   end
 
+  def get_elements_parent_map(parent_node = @sass_style_sheet)
+
+    parents_map = Hash.new
+    parent_node.children.each do |child|
+      parents_map[child] = parent_node
+      children_map = get_elements_parent_map(child)
+      parents_map = parents_map.merge(children_map)
+    end
+
+    parents_map
+
+  end
 end
