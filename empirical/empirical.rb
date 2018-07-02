@@ -95,6 +95,60 @@ class EmpiricalStudy
 
   end
 
+  def write_mixin_declaration_properties_info_to_file(path)
+
+    @sass_style_sheets_paths.each do |path_to_main_sass_file|
+
+      visited_mixin_declarations = Set.new
+
+      query_handler = SassASTQueryHandler.new(path_to_main_sass_file)
+
+      mixin_calls = query_handler.get_mixin_call_info
+
+      query_handler.get_mixin_declaration_info.each do |mixin_declaration_info|
+        mixin_declaration_hash = "#{mixin_declaration_info.path_to_style_sheet}-#{mixin_declaration_info.get_mixin_hash_string}"
+        unless visited_mixin_declarations.include? mixin_declaration_hash
+          visited_mixin_declarations.add(mixin_declaration_hash)
+          file_name = mixin_declaration_info.path_to_style_sheet
+          mixin_name = mixin_declaration_info.mixin_name
+          n_params = mixin_declaration_info.number_of_parameters
+          n_calls = 0
+          n_rules_called = 0
+          called_in_rules = []
+          mixin_calls.each do |mixin_call_info|
+            if mixin_call_info.mixin_declaration.eql? mixin_declaration_info
+              mixin_called_in_rules = mixin_call_info.get_callers(mixin_calls)
+              called_in_rules << mixin_called_in_rules
+              n_rules_called += mixin_called_in_rules.length
+              n_calls += 1
+            end
+          end
+
+          declarations = query_handler.get_all_declarations(mixin_declaration_info.original_mixin_declaration_node, false)
+
+          n_declarations = declarations.size
+
+          line = "#{@website}|#{path_to_main_sass_file}|#{file_name}|#{mixin_name}|#{n_params}|#{n_calls}|#{n_declarations}|#{n_rules_called}\n"
+          write_line_to_file(path, line, true)
+
+          called_in_rules.each do |rules|
+            rules.each do |rule|
+              d = rule[0..rule.length-1]
+              write_line_to_file(path, "#{d}\n", true)
+            end
+          end
+
+          declarations.each do |declaration, parent|
+            write_line_to_file(path, "#{declaration.name.join}\n", true)
+          end
+
+        end
+      end
+
+    end
+
+  end
+
   def write_extend_info_to_file(path, header = true)
     if header
       write_line_to_file(path, "WebSite|File|Line|Target\n", false);
