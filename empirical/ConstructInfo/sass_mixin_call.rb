@@ -73,7 +73,7 @@ class SassMixinCall < SassConstruct
         callers = callers_for_mixin
       #elsif parent.kind_of?(Sass::Tree::MediaNode)
       else
-        puts "The mixin is called in #{parent.class}, I don't know what to do with it."
+        puts "The mixin is called in #{parent.class}, skipping to the next parent."
       end
     end
 
