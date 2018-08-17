@@ -57,7 +57,6 @@ class SassMixinCall < SassConstruct
         callers << SassASTQueryHandler.remove_illegal_chars(d.to_scss.gsub("prop: val;", "").gsub!(/{|}/, ""))
       end
     end
-    puts(callers)
     callers
   end
 
